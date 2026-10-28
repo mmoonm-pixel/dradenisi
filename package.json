@@ -13,7 +13,8 @@
     "test:browser": "node tests/browser.mjs",
     "test:motion": "node tests/motion.mjs",
     "test:navigation": "node tests/navigation-layout.mjs",
-    "test:submit": "node tests/submit.mjs"
+    "test:submit": "node tests/submit.mjs",
+    "test:locations": "node tests/locations-form.mjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"

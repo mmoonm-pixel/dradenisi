@@ -1,12 +1,13 @@
+import {initLocations,getSelectedLocation} from './locations.js';
 import {initNavigation} from './navigation.js';
 import {initMotion} from './motion.js';
 import {serviceArt,renderIcons} from './icons.js';
-import {clinic,services,serviceOptions,todayJoinville,dateError,whatsappUrl} from './data.js';
+import {clinic,locations,services,serviceOptions,todayJoinville,validateBooking,whatsappUrl} from './data.js';
 const $=s=>document.querySelector(s);
 document.querySelectorAll('[data-whatsapp]').forEach(a=>a.href=clinic.whatsapp);
-document.querySelectorAll('[data-address]').forEach(a=>a.textContent=clinic.address);
+initLocations();
 $('#instagram').href=clinic.instagram;$('#year').textContent=new Date().getFullYear();
-const address=encodeURIComponent(clinic.address);$('#directions').href='https://www.google.com/maps/search/?api=1&query='+address;
+
 initNavigation();
 const menu=$('#navigation'),toggle=$('.menu-toggle');function closeMenu(){menu.classList.remove('open');toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-label','Abrir menu');menu.inert=matchMedia('(max-width:900px)').matches}
 toggle.addEventListener('click',()=>{const open=toggle.getAttribute('aria-expanded')!=='true';menu.classList.toggle('open',open);toggle.setAttribute('aria-expanded',String(open));toggle.setAttribute('aria-label',open?'Fechar menu':'Abrir menu');menu.inert=!open});
@@ -22,11 +23,15 @@ const dialog=$('#booking'),form=$('#booking-form');let origin;let closing=false;
 function closeBooking(){if(closing||!dialog.open)return;closing=true;const finish=()=>{if(dialog.open)dialog.close();closing=false};if(reduced.matches){finish();return}dialog.animate([{opacity:1,transform:'translateY(0)'},{opacity:0,transform:'translateY(10px)'}],{duration:160,easing:'ease-in',fill:'none'}).finished.then(finish,finish)}
 for(const service of serviceOptions){const opt=document.createElement('option');opt.value=opt.textContent=service;$('#service').append(opt)}
 function error(field,message){const input=$('#'+field);input.setAttribute('aria-invalid',String(!!message));$('#'+field+'-error').textContent=message}
-function validate(field){const value=$('#'+field).value;const message=field==='name'?(!value.trim()?'Informe seu nome.':''):field==='service'?(!serviceOptions.includes(value)?'Selecione um serviço de interesse.':''):dateError(value);error(field,message);return !message}
-document.addEventListener('click',e=>{const button=e.target.closest('[data-book]');if(!button)return;origin=button;form.reset();['name','service','date'].forEach(field=>error(field,''));$('#form-status').textContent='';$('#service').value=button.dataset.service||'';$('#date').min=todayJoinville();dialog.showModal();if(!reduced.matches)dialog.animate([{opacity:0,transform:'translateY(16px)'},{opacity:1,transform:'translateY(0)'}],{duration:230,easing:'ease-out'});document.body.classList.add('modal-open');$('#name').focus()});
-$('#close-modal').onclick=closeBooking;dialog.addEventListener('cancel',e=>{e.preventDefault();closeBooking()});dialog.addEventListener('close',()=>{form.reset();document.body.classList.remove('modal-open');origin?.focus()});dialog.addEventListener('click',e=>{if(e.target===dialog){const rect=dialog.getBoundingClientRect();if(e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom)closeBooking()}});
-for(const field of ['name','service','date'])$('#'+field).addEventListener(field==='name'?'input':'change',()=>validate(field));
-form.addEventListener('submit',e=>{e.preventDefault();const invalid=['name','service','date'].filter(field=>!validate(field));if(invalid.length){$('#'+invalid[0]).focus();return}const data=Object.fromEntries(new FormData(form));window.open(whatsappUrl(data),'_blank','noopener,noreferrer');$('#form-status').textContent='Revise e envie sua solicitação no WhatsApp. A disponibilidade será confirmada pela equipe.'});
+const fields=['name','insurance','insurer','location','service','date'];
+function currentData(){return Object.fromEntries(new FormData(form))}
+function validate(field){const message=validateBooking(currentData())[field];error(field,message);return !message}
+function syncConditionalFields(){const insured=$('#insurance').value==='Sim';$('#insurer-details').hidden=!insured;$('#insurer').disabled=!insured;$('#insurer').required=insured;if(!insured){$('#insurer').value='';error('insurer','')}const preferred=$('#professionalPreference').value==='informar';$('#professional-details').hidden=!preferred;$('#professional').disabled=!preferred;if(!preferred)$('#professional').value=''}
+$('#insurance').addEventListener('change',syncConditionalFields);$('#professionalPreference').addEventListener('change',syncConditionalFields);
+document.addEventListener('click',e=>{const button=e.target.closest('[data-book]');if(!button)return;origin=button;form.reset();fields.forEach(field=>error(field,''));syncConditionalFields();$('#form-status').textContent='';$('#service').value=button.dataset.service||'';$('#location').value=Object.hasOwn(locations,button.dataset.location||'')?button.dataset.location:getSelectedLocation();$('#date').min=todayJoinville();dialog.showModal();if(!reduced.matches)dialog.animate([{opacity:0,transform:'translateY(16px)'},{opacity:1,transform:'translateY(0)'}],{duration:230,easing:'ease-out'});document.body.classList.add('modal-open');$('#name').focus()});
+$('#close-modal').onclick=closeBooking;dialog.addEventListener('cancel',e=>{e.preventDefault();closeBooking()});dialog.addEventListener('close',()=>{form.reset();syncConditionalFields();document.body.classList.remove('modal-open');origin?.focus()});dialog.addEventListener('click',e=>{if(e.target===dialog){const rect=dialog.getBoundingClientRect();if(e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom)closeBooking()}});
+for(const field of fields)$('#'+field).addEventListener(['name','insurer'].includes(field)?'input':'change',()=>validate(field));
+form.addEventListener('submit',e=>{e.preventDefault();const invalid=fields.filter(field=>!validate(field));if(invalid.length){$('#'+invalid[0]).focus();return}const data=Object.fromEntries(new FormData(form));window.open(whatsappUrl(data),'_blank','noopener,noreferrer');$('#form-status').textContent='Revise e envie sua solicitação no WhatsApp. Depois, aguarde o atendimento da equipe.'});
 
 renderIcons();
 const reviews=$('.reviews-track');reviews.addEventListener('keydown',e=>{if(e.target!==reviews||!['ArrowLeft','ArrowRight'].includes(e.key))return;e.preventDefault();reviews.scrollBy({left:(e.key==='ArrowRight'?1:-1)*(reviews.firstElementChild.getBoundingClientRect().width+20),behavior:reduced.matches?'instant':'smooth'})});

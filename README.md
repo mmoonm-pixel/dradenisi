@@ -101,3 +101,18 @@ A versão inicial é enviada para `main`. Faça alterações posteriores em bran
 ## Exclusões
 
 O `.gitignore` exclui `node_modules/`, `.env`, `.env.*`, chaves privadas, arquivos de credenciais, metadados do Sites, capturas e logs. O repositório contém o código, imagens, fontes, bibliotecas locais, testes, lockfile e instruções. `dist/` é gerado localmente por `npm run build` e não é versionado. Nenhuma credencial de hospedagem acompanha o código.
+
+
+
+
+## Versão atual: dois endereços de atendimento
+
+O seletor de localização apresenta Pirabeiraba (Rua Presidente Vargas, 593, Pirabeiraba, Joinville/SC) e Centro (Rua Alexandre Dohler, 129, sala 503, Centro, Joinville/SC). A seleção atualiza endereço, mapa, marcador de sorriso e trajeto. Não se afirma a propriedade de duas clínicas.
+
+Os pontos cartográficos dos edifícios foram confirmados e estão centralizados em `public/data.js`, com as respostas de verificação em `docs/`. O ponto do Centro representa o edifício Centro Médico União, sem inventar posição interna da sala 503.
+
+O formulário exige nome completo, informação sobre convênio, nome do convênio somente quando Sim, endereço, serviço e data. Profissional, período e observação são opcionais. Nenhuma lista de profissionais ou de convênios aceitos foi inventada. Os campos condicionais são limpos e desativados quando deixam de se aplicar. A mensagem é montada para revisão e envio manual no WhatsApp, sem armazenamento de dados e sem confirmação automática de consulta.
+
+Execute `npm run test:locations` com o servidor local aberto para verificar os dois endereços e mapas, os CTAs de agendamento, os campos condicionais e a mensagem final em desktop e mobile.
+
+As capas oficiais são preservadas sem edição; a palavra Pirabeiraba incorporada às imagens permanece como pendência para uma atualização futura das artes incluindo o Centro.
